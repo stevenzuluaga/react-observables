@@ -1,0 +1,95 @@
+---
+id: 7515f845-0b7e-4b5c-aa4d-e099c18b4332
+---
+graph TB
+    subgraph "Presentation Layer"
+        Main[main.tsx<br/>Entry Point]
+        App[App.tsx<br/>Root Component]
+        CharPage[Characters Page<br/>pages/Characters/index.tsx]
+        Card[Card Component<br/>components/Card]
+        SearchBar[SearchBar Component<br/>components/SearchBar]
+    end
+
+    subgraph "Custom Hooks Layer"
+        UseChar[useCharacterSearch Hook<br/>RxJS Observable + React State]
+    end
+
+    subgraph "Services Layer"
+        RMService[rick-and-morty.service.ts<br/>getCharacters API]
+        HttpClient[http-client.ts<br/>Axios Instance + Interceptors]
+    end
+
+    subgraph "Domain Layer"
+        CharEntity[character.entity.ts<br/>Character Interface]
+        Pagination[pagination.ts<br/>Pagination Interface]
+        PageState[interfaces.tsx<br/>PageState Interface]
+    end
+
+    subgraph "External"
+        API[Rick and Morty API<br/>rickandmortyapi.com]
+        ENV[.env<br/>VITE_RICK_AND_MORTY_URL_API]
+    end
+
+    subgraph "State Management"
+        BehaviorSub[RxJS BehaviorSubject<br/>inputChange$]
+        ReactState[React useState<br/>pageState]
+    end
+
+    subgraph "Build & Dev Tools"
+        Vite[Vite<br/>Build Tool + Dev Server]
+        TS[TypeScript<br/>Type Checking]
+        Tailwind[Tailwind CSS<br/>Styling]
+    end
+
+    %% Main Flow
+    Main -->|renders| App
+    App -->|renders| CharPage
+    CharPage -->|uses| UseChar
+    CharPage -->|renders| Card
+
+    %% Hook Flow
+    UseChar -->|calls| RMService
+    UseChar -->|manages| BehaviorSub
+    UseChar -->|manages| ReactState
+
+    %% Service Flow
+    RMService -->|uses| HttpClient
+    HttpClient -->|HTTP GET| API
+
+    %% Configuration
+    ENV -.->|configures| HttpClient
+    ENV -.->|configures| RMService
+
+    %% Domain Types
+    CharEntity -.->|types| RMService
+    CharEntity -.->|types| UseChar
+    CharEntity -.->|types| CharPage
+    Pagination -.->|types| CharEntity
+    PageState -.->|types| UseChar
+
+    %% RxJS Pipeline
+    BehaviorSub -->|debounceTime 500ms| BehaviorSub
+    BehaviorSub -->|distinctUntilChanged| BehaviorSub
+    BehaviorSub -->|filter length > 3| BehaviorSub
+    BehaviorSub -->|switchMap| RMService
+
+    %% Build Process
+    Vite -.->|bundles| Main
+    TS -.->|type checks| CharEntity
+    Tailwind -.->|styles| CharPage
+
+    %% Interceptors
+    HttpClient -->|Request Interceptor<br/>Add Auth Token| HttpClient
+    HttpClient -->|Response Interceptor<br/>Error Handling| HttpClient
+
+    style Main fill:#61dafb,stroke:#000,stroke-width:2px
+    style App fill:#61dafb,stroke:#000,stroke-width:2px
+    style CharPage fill:#61dafb,stroke:#000,stroke-width:2px
+    style UseChar fill:#cc6699,stroke:#000,stroke-width:2px
+    style BehaviorSub fill:#b7178c,stroke:#000,stroke-width:2px
+    style ReactState fill:#61dafb,stroke:#000,stroke-width:2px
+    style RMService fill:#4caf50,stroke:#000,stroke-width:2px
+    style HttpClient fill:#4caf50,stroke:#000,stroke-width:2px
+    style API fill:#97ce4c,stroke:#000,stroke-width:3px
+    style CharEntity fill:#3178c6,stroke:#000,stroke-width:2px
+    style Vite fill:#646cff,stroke:#000,stroke-width:2px

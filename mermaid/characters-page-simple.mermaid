@@ -1,0 +1,140 @@
+---
+id: 7515f845-0b7e-4b5c-aa4d-e099c18b4332
+title: Characters Page Architecture Diagram
+---
+graph TB
+    %% ========================================
+    %% MAIN PAGE COMPONENT
+    %% ========================================
+    CharactersPage["<b>Characters Page</b><br/>pages/Characters/index.tsx<br/>━━━━━━━━━━━━━━<br/>Main page component"]
+
+    %% ========================================
+    %% CUSTOM HOOK
+    %% ========================================
+    useCharacterSearch["<b>useCharacterSearch Hook</b><br/>pages/Characters/useCharacters.tsx<br/>━━━━━━━━━━━━━━<br/>- Manages search state<br/>- RxJS stream processing<br/>- API data fetching"]
+
+    %% ========================================
+    %% STATE MANAGEMENT
+    %% ========================================
+    PageState["<b>PageState&lt;T&gt;</b><br/>pages/interfaces.tsx<br/>━━━━━━━━━━━━━━<br/>isLoading: boolean<br/>error: string | null<br/>data: T[]"]
+
+    EmptyPageState["<b>EmptyPageState</b><br/>Initial state constant"]
+
+    inputChangeSubject["<b>inputChange$</b><br/>BehaviorSubject&lt;string&gt;<br/>━━━━━━━━━━━━━━<br/>Search input stream"]
+
+    %% ========================================
+    %% DOMAIN ENTITIES & TYPES
+    %% ========================================
+    Character["<b>Character Interface</b><br/>core/domain/character.entity.ts<br/>━━━━━━━━━━━━━━<br/>id: number<br/>name: string<br/>status: CharacterStatus<br/>species: string<br/>type: string<br/>gender: CharacterGender<br/>origin: Location<br/>location: Location<br/>image: string<br/>episode: string[]<br/>url: string<br/>created: string"]
+
+    Location["<b>Location Interface</b><br/>core/domain/character.entity.ts<br/>━━━━━━━━━━━━━━<br/>name: string<br/>url: string"]
+
+    CharacterStatus["<b>CharacterStatus Type</b><br/>━━━━━━━━━━━━━━<br/>'Alive' | 'Dead' | 'unknown'"]
+
+    CharacterGender["<b>CharacterGender Type</b><br/>━━━━━━━━━━━━━━<br/>'Female' | 'Male'<br/>'Genderless' | 'unknown'"]
+
+    CharacterPagination["<b>CharacterPagination</b><br/>core/domain/character.entity.ts<br/>━━━━━━━━━━━━━━<br/>Pagination&lt;Character&gt;"]
+
+    Pagination["<b>Pagination&lt;T&gt;</b><br/>core/domain/common/pagination.ts<br/>━━━━━━━━━━━━━━<br/>info: &#123;<br/>  count: number<br/>  pages: number<br/>  next: string | null<br/>  prev: string | null<br/>&#125;<br/>results: T[]"]
+
+    %% ========================================
+    %% SERVICE LAYER
+    %% ========================================
+    RickMortyService["<b>getCharacters</b><br/>services/rick-and-morty.service.ts<br/>━━━━━━━━━━━━━━<br/>API service function<br/>Returns: CharacterPagination"]
+
+    HttpClient["<b>clientHttp</b><br/>services/http-client.ts<br/>━━━━━━━━━━━━━━<br/>Axios wrapper<br/>- Request interceptor<br/>- Response interceptor<br/>- Error handling<br/>Methods: get, post, put, patch, delete"]
+
+    %% ========================================
+    %% UI COMPONENTS
+    %% ========================================
+    Card["<b>Card Component</b><br/>components/Card/index.tsx<br/>━━━━━━━━━━━━━━<br/>Props: &#123; character: Character &#125;<br/>Displays character details"]
+
+    %% ========================================
+    %% RXJS OPERATORS
+    %% ========================================
+    RxJS["<b>RxJS Pipeline</b><br/>━━━━━━━━━━━━━━<br/>debounceTime(500)<br/>distinctUntilChanged()<br/>filter(length > 3)<br/>switchMap(getCharacters)<br/>shareReplay(1)"]
+
+    %% ========================================
+    %% EXTERNAL API
+    %% ========================================
+    API["<b>Rick and Morty API</b><br/>External REST API<br/>━━━━━━━━━━━━━━<br/>rickandmortyapi.com"]
+
+    %% ========================================
+    %% RELATIONSHIPS - Characters Page
+    %% ========================================
+    CharactersPage -->|"uses hook"| useCharacterSearch
+    CharactersPage -->|"imports type"| Character
+    CharactersPage -->|"renders list of"| Card
+    CharactersPage -->|"calls searchCharacters()<br/>on input onChange"| useCharacterSearch
+
+    %% ========================================
+    %% RELATIONSHIPS - useCharacterSearch Hook
+    %% ========================================
+    useCharacterSearch -->|"manages state"| PageState
+    useCharacterSearch -->|"initializes with"| EmptyPageState
+    useCharacterSearch -->|"types data as"| Character
+    useCharacterSearch -->|"calls"| RickMortyService
+    useCharacterSearch -->|"creates & manages"| inputChangeSubject
+    useCharacterSearch -->|"processes with"| RxJS
+
+    %% ========================================
+    %% RELATIONSHIPS - State
+    %% ========================================
+    PageState -->|"generic T =>"| Character
+    EmptyPageState -->|"implements"| PageState
+
+    %% ========================================
+    %% RELATIONSHIPS - Character Entity
+    %% ========================================
+    Character -->|"uses type"| CharacterStatus
+    Character -->|"uses type"| CharacterGender
+    Character -->|"has nested"| Location
+    Character -->|"wrapped in"| CharacterPagination
+
+    %% ========================================
+    %% RELATIONSHIPS - Pagination
+    %% ========================================
+    CharacterPagination -->|"type alias of"| Pagination
+    Pagination -->|"generic T =>"| Character
+
+    %% ========================================
+    %% RELATIONSHIPS - Service Layer
+    %% ========================================
+    RickMortyService -->|"returns"| CharacterPagination
+    RickMortyService -->|"uses"| HttpClient
+    HttpClient -->|"HTTP GET request"| API
+
+    %% ========================================
+    %% RELATIONSHIPS - Card Component
+    %% ========================================
+    Card -->|"receives prop"| Character
+    Card -->|"displays"| Location
+    Card -->|"displays"| CharacterStatus
+    Card -->|"displays"| CharacterGender
+
+    %% ========================================
+    %% RELATIONSHIPS - RxJS Stream
+    %% ========================================
+    inputChangeSubject -->|"piped through"| RxJS
+    RxJS -->|"triggers"| RickMortyService
+
+    %% ========================================
+    %% STYLING
+    %% ========================================
+    classDef componentClass fill:#61dafb,stroke:#333,stroke-width:3px,color:#000
+    classDef hookClass fill:#ffa726,stroke:#333,stroke-width:3px,color:#000
+    classDef interfaceClass fill:#66bb6a,stroke:#333,stroke-width:2px,color:#000
+    classDef typeClass fill:#81c784,stroke:#333,stroke-width:2px,color:#000
+    classDef serviceClass fill:#ab47bc,stroke:#333,stroke-width:3px,color:#fff
+    classDef rxjsClass fill:#b7178c,stroke:#333,stroke-width:3px,color:#fff
+    classDef apiClass fill:#42a5f5,stroke:#333,stroke-width:3px,color:#fff
+    classDef stateClass fill:#ff7043,stroke:#333,stroke-width:2px,color:#fff
+
+    class CharactersPage,Card componentClass
+    class useCharacterSearch hookClass
+    class Character,Location,CharacterPagination,Pagination,PageState interfaceClass
+    class CharacterStatus,CharacterGender typeClass
+    class RickMortyService,HttpClient serviceClass
+    class RxJS,inputChangeSubject rxjsClass
+    class API apiClass
+    class EmptyPageState stateClass
